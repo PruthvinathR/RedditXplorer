@@ -37,8 +37,11 @@ def get_reddit_post_by_id():
     return jsonify(post.to_dict())
 
 
-@post_controller_bp.route('/chat', methods=['GET'])
+@post_controller_bp.route('/chat', methods=['POST'])
 def chat_with_post():
-    message = request.args.get('message')
-    response = reply_to_message(message)
+    data = request.json
+    post_id = data.get('post_id')
+    message = data.get('message')
+    chat_history = data.get('chat_history', [])
+    response = reply_to_message(message, chat_history)
     return jsonify({'response': response})

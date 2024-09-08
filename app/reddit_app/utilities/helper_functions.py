@@ -12,6 +12,7 @@ from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_pinecone import PineconeVectorStore
+from langchain.chains.history_aware_retriever import create_history_aware_retriever
 
 # Local application imports
 from app.reddit_app.models.Post import Post
@@ -169,7 +170,7 @@ def format_documents(documents):
     return "\n\n".join([doc.page_content for doc in documents])
 
 
-def reply_to_message(message):
+def reply_to_message(message, chat_history):
     """
     Reply to a message using RAG.
 
@@ -179,11 +180,13 @@ def reply_to_message(message):
 
     Args:
         message (str): The message to be replied to.
-
+        chat_history (list): A list of tuples representing the chat history.
     Returns:
         str: The generated response to the message.
     """ 
-
+    # Convert chat_history to the format expected by the retrieval chain
+    formatted_history = [(speaker, msg) for speaker, msg in chat_history]
+    print(formatted_history)
     embeddings = OpenAIEmbeddings(openai_api_key=os.environ["OPENAI_API_KEY"])
     llm = ChatOpenAI(model="gpt-4o-mini")
 
@@ -199,11 +202,16 @@ def reply_to_message(message):
         llm, prompt=retrieval_qa_chat_prompt
     )
 
+    rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
+
+    history_aware_retriever = create_history_aware_retriever(llm=llm, retriever=vectorstore.as_retriever(), prompt=rephrase_prompt)
+
+
     retrieval_chain = create_retrieval_chain(
-        retriever=vectorstore.as_retriever(), combine_docs_chain=combine_docs_chain
+        retriever=history_aware_retriever, combine_docs_chain=combine_docs_chain
     )
 
-    result = retrieval_chain.invoke({"input": query})
+    result = retrieval_chain.invoke({"input": query, "chat_history": chat_history})
 
     print(result["answer"])
 
