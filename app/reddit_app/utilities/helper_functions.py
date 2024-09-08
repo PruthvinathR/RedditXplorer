@@ -215,27 +215,5 @@ def reply_to_message(message, chat_history):
 
     print(result["answer"])
 
-    template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know. 
-    Use 3 sentences maximum and keep the answer concise.
-
-    {context}
-
-    Question: {question}
-
-    Helpful Answer:"""
-
-    custom_rag_prompt = PromptTemplate.from_template(template)
-
-    rag_chain = (
-        {
-            "context": vectorstore.as_retriever() | format_documents,
-            "question": RunnablePassthrough(),
-        }
-        | custom_rag_prompt
-        | llm
-    )
-
-    result = rag_chain.invoke(input=query)
-
-    return result.content
+    return result["answer"]
 
