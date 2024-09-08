@@ -1,6 +1,6 @@
 
 from flask import Blueprint
-from app.reddit_app.controllers.PostController import post_controller_bp
+from app.reddit_app.controllers.post_controller import post_controller_bp
 
 reddit_bp = Blueprint('reddit_blueprint', __name__)
 

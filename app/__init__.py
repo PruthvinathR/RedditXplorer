@@ -1,6 +1,6 @@
 from flask import Flask
 from app.reddit_app import reddit_bp
-from app.reddit_app.controllers.PostController import post_controller_bp
+from app.reddit_app.controllers.post_controller import post_controller_bp
 
 def create_app():
     app = Flask(__name__)
